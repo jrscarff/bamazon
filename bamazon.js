@@ -30,11 +30,17 @@ function customerOptions() {
 	}]).then(function(res) {
 		var selection = res.choice;
 		var number = parseInt(res.number)
-		connection.query("UPDATE products SET quantity = quantity - ? WHERE id = ?", [number, selection], function(err, response) {
+		connection.query("SELECT * FROM products WHERE id = ?", [selection], function(err, response) {
 			if (err) {throw err}
+			if (number > response[0].quantity) {
+				console.log("That is more quantity than we currently have in stock. Please try again.")
+			}
+			else {
+				var newQuantity = response[0].quantity - number;
+				updateProducts(selection, newQuantity);
+			}
 		})
-		showProducts();
-		connection.end();
+		
 	})
 	
 }
@@ -47,4 +53,12 @@ function showProducts() {
 			console.log(res[i].id, res[i].name, res[i].department, res[i].price, res[i].quantity);
 		};
 	})
+}
+
+function updateProducts(id, quantity) {
+	connection.query("UPDATE products SET quantity = ? WHERE id = ?", [quantity, id], function(err, res) {
+		if (err) {throw err};
+	})
+	showProducts();
+	connection.end();
 }
